@@ -2,12 +2,14 @@ package service
 
 import (
 	"context"
+	"github.com/rs/zerolog"
 	"github.com/softlandia/hismap/models"
 	"github.com/softlandia/hismap/pkg/mongo_db"
 	"github.com/softlandia/hismap/repo/items"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"os"
 	"testing"
 	"time"
 )
@@ -20,12 +22,40 @@ func tConnect(t *testing.T) mongo_db.Connect {
 }
 
 func tRepo(t *testing.T, connect mongo_db.Connect) items.Repo {
-	res := items.New(context.Background(), connect)
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	res := items.New(context.Background(), &logger, connect)
 	assert.NotNil(t, res)
 	return res
 }
 
-func TestService_InsertItem(t *testing.T) {
+func TestService_InsertItems(t *testing.T) {
+	c := tConnect(t)
+	r := tRepo(t, c)
+	s := NewService(Config{
+		Log: nil,
+		Db:  c,
+		Ctx: context.Background(),
+		Repositories: Repositories{
+			Items: r,
+		},
+	})
+
+	s.Repo.Items.Delete(bson.M{"oid": "TestService_InsertItems"})
+	list := models.ItemList{
+		models.Item{
+			OID:    "TestService_InsertItems",
+			Border: models.Border{models.Vertex{X: -101, Y: -201}, models.Vertex{X: 101, Y: 201}},
+		},
+		models.Item{
+			OID:    "TestService_InsertItems",
+			Border: models.Border{models.Vertex{X: -102, Y: -202}, models.Vertex{X: 102, Y: 202}},
+		},
+	}
+	err := s.InsertItems(list)
+	assert.Nil(t, err)
+}
+
+func TestService_InsertOneItem(t *testing.T) {
 	c := tConnect(t)
 	r := tRepo(t, c)
 	s := NewService(Config{
@@ -39,7 +69,7 @@ func TestService_InsertItem(t *testing.T) {
 
 	s.Repo.Items.Delete(bson.M{"oid": "service-test"})
 
-	id, err := s.InsertItem(models.Item{
+	id, err := s.InsertOneItem(models.Item{
 		ID:  primitive.NewObjectID(),
 		OID: "service-test",
 		Object: models.Object{
@@ -85,12 +115,12 @@ func TestService_GetOneItem(t *testing.T) {
 		Ymax:   0,
 		Border: models.Border{models.Vertex{X: 0, Y: 0}, models.Vertex{X: 0, Y: 0}},
 	}
-	_, err := s.InsertItem(item)
+	_, err := s.InsertOneItem(item)
 	assert.Nil(t, err)
 
 	item.ID = primitive.NewObjectID()
 	item.Object.Caption = "-22-"
-	_, err = s.InsertItem(item)
+	_, err = s.InsertOneItem(item)
 	assert.Nil(t, err)
 
 	time.Sleep(time.Millisecond)

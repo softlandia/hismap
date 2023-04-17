@@ -38,17 +38,34 @@ func NewService(config Config) *Service {
 	}
 }
 
-// InsertItem - сохранить в базу один элемент карты
-func (s *Service) InsertItem(item models.Item) (primitive.ObjectID, error) {
+func (s *Service) InsertItems(items models.ItemList) error {
+	return s.Repo.Items.Insert(items.ToRepo())
+}
+
+// InsertOneItem - сохранить в базу один элемент карты
+func (s *Service) InsertOneItem(item models.Item) (primitive.ObjectID, error) {
 	return s.Repo.Items.InsertOne(item.ToRepo())
 }
 
-func (s *Service) GetItems(itemFilter models.ItemsFilter) models.Item {
-	s.Repo.Items.Find(itemFilter.ToRepo())
-	return models.Item{}
+// GetItems - получить выборку элементов на карту
+func (s *Service) GetItems(itemFilter models.ItemsFilter) models.ItemList {
+	repoItems := s.Repo.Items.Find(itemFilter.ToRepo())
+	return models.RepoToItemList(repoItems)
 }
 
 func (s *Service) GetOneItem(itemFilter models.ItemsFilter) models.Item {
 	res, _ := s.Repo.Items.FindOne(itemFilter.ToRepo())
 	return models.RepoToItem(res)
+}
+
+func (s *Service) FillTestItems(oid string, n int) models.ItemList {
+	if n <= 0 {
+		return models.ItemList{}
+	}
+
+	res := make(models.ItemList, 0, n)
+	for i := 0; i < n; i++ {
+		res = append(res, models.FooItem(oid))
+	}
+	return res
 }

@@ -18,6 +18,7 @@ type MsgError struct {
 // MainHandler - ПУБЛИЧНЫЕ обработчики
 func MainHandler(s *service.Service) *gin.Engine {
 	info := infoTransport{s}
+	itemsTransport := itemsTransport{s}
 
 	g := gin.Default()
 	//g.Use(MetricsMiddleware())
@@ -25,20 +26,23 @@ func MainHandler(s *service.Service) *gin.Engine {
 	api := g.Group("/api/v1")
 
 	api.GET("/about", info.about)
+	api.GET("/items/find", itemsTransport.find)
 
 	return g
 }
 
 // AdminHandler - АДМИНСКИЕ обработчики
 func AdminHandler(s *service.Service) *gin.Engine {
-	items := itemsTransport{s}
+	itemsTransport := itemsTransport{s}
 
 	g := gin.Default()
 	//g.Use(MetricsMiddleware())
 
 	api := g.Group("/api/admin")
 
-	api.GET("/item/find/oid/:oid", items.findOid)
+	api.GET("/item/find/oid/:oid", itemsTransport.findOid)
+	api.POST("/items/oid/:OID/fill", itemsTransport.fillTestData)
+	api.DELETE("/items/oid/:OID", itemsTransport.deleteOid)
 
 	return g
 }

@@ -7,7 +7,8 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/prometheus/client_golang v1.6.0
 	github.com/rs/zerolog v1.19.0
-	github.com/stretchr/testify v1.6.1
+	github.com/softlandia/xlib v0.0.2
+	github.com/stretchr/testify v1.8.2
 	go.mongodb.org/mongo-driver v1.11.4
 )
 

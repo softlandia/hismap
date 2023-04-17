@@ -5,6 +5,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/softlandia/hismap/pkg/mongo_db"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"os"
 	"testing"
@@ -41,4 +42,20 @@ func TestRepo_InsertOne(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEqual(t, primitive.NilObjectID, id)
 	r.DEL(id)
+}
+
+func TestRepo_Insert(t *testing.T) {
+	r := tRepo(t)
+	r.Delete(bson.M{"oid": "TestRepo_Insert"})
+
+	items := Items{
+		Item{
+			OID: "TestRepo_Insert",
+		},
+		Item{
+			OID: "TestRepo_Insert",
+		},
+	}
+	err := r.Insert(items)
+	assert.Nil(t, err)
 }

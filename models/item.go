@@ -3,10 +3,29 @@ package models
 import (
 	"github.com/softlandia/hismap/repo/items"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"math/rand"
 )
 
-// Items - набор элементов на карте
-type Items []Item
+// ItemList - набор элементов на карте
+type ItemList []Item
+
+// ToRepo - преобразование типа ItemList -> items.Items
+func (il ItemList) ToRepo() items.Items {
+	res := make(items.Items, 0, len(il))
+	for _, e := range il {
+		res = append(res, e.ToRepo())
+	}
+	return res
+}
+
+// RepoToItemList - преобразование типа items.Items -> ItemList
+func RepoToItemList(list items.Items) ItemList {
+	res := make(ItemList, 0, len(list))
+	for _, e := range list {
+		res = append(res, RepoToItem(e))
+	}
+	return res
+}
 
 // Item - элемент карты
 type Item struct {
@@ -97,4 +116,35 @@ func (i Item) ToRepo() items.Item {
 		Ymax:   i.Ymax,
 		Border: i.Border.ToRepo(),
 	}
+}
+
+func FooItem(oid string) Item {
+	start := rand.Int31()
+	xMin := int(rand.Int31())
+	yMin := int(rand.Int31())
+	return Item{
+		OID: oid,
+		Object: Object{
+			Caption: "fill-test",
+			StyleId: "fill-test",
+		},
+		Start:  start,
+		Stop:   start + rand.Int31(),
+		Xmin:   xMin,
+		Xmax:   xMin + rand.Intn(1000),
+		Ymin:   yMin,
+		Ymax:   yMin + rand.Intn(500),
+		Border: FooBorder(rand.Intn(50)),
+	}
+}
+
+func FooBorder(n int) Border {
+	res := make(Border, 0, n)
+	for i := 0; i < n; i++ {
+		res = append(res, Vertex{
+			X: rand.Int31(),
+			Y: rand.Int31(),
+		})
+	}
+	return res
 }
