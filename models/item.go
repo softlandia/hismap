@@ -2,6 +2,7 @@ package models
 
 import (
 	"github.com/softlandia/hismap/repo/items"
+	"github.com/softlandia/hismap/repo/itemsv2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"math/rand"
 )
@@ -39,6 +40,8 @@ type Item struct {
 	Ymin   int    // нижний край
 	Ymax   int    // верхний край
 	Border Border // граница
+	X      []int32
+	Y      []int32
 }
 
 // Object - объект исторической карты, логический элемент, может иметь много Item для разного времени и местоположения
@@ -118,33 +121,59 @@ func (i Item) ToRepo() items.Item {
 	}
 }
 
-func FooItem(oid string) Item {
-	start := rand.Int31()
-	xMin := int(rand.Int31())
-	yMin := int(rand.Int31())
-	return Item{
-		OID: oid,
-		Object: Object{
-			Caption: "fill-test",
-			StyleId: "fill-test",
+// ToRepoV2 - преобразование типа Item -> itemsv2.Item
+func (i Item) ToRepoV2() itemsv2.Item {
+	return itemsv2.Item{
+		ID:  i.ID,
+		OID: i.OID,
+		Object: itemsv2.Object{
+			Caption: i.Object.Caption,
+			StyleId: i.Object.StyleId,
 		},
-		Start:  start,
-		Stop:   start + rand.Int31(),
-		Xmin:   xMin,
-		Xmax:   xMin + rand.Intn(1000),
-		Ymin:   yMin,
-		Ymax:   yMin + rand.Intn(500),
-		Border: FooBorder(rand.Intn(50)),
+		Start: i.Start,
+		Stop:  i.Stop,
+		Xmin:  i.Xmin,
+		Xmax:  i.Xmax,
+		Ymin:  i.Ymin,
+		Ymax:  i.Ymax,
+		X:     i.X,
+		Y:     i.Y,
 	}
 }
 
-func FooBorder(n int) Border {
-	res := make(Border, 0, n)
-	for i := 0; i < n; i++ {
-		res = append(res, Vertex{
-			X: rand.Int31(),
-			Y: rand.Int31(),
-		})
+func FooVector(n int) []int32 {
+	res := make([]int32, n)
+	res[0] = rand.Int31n(1000)
+
+	for i := 1; i < n; i++ {
+		d := rand.Int31n(10)
+		sign := rand.Int31n(3) - 1
+		res[i] = res[i-1] + sign*d
+	}
+	return res
+}
+
+func FooBorder2(n int) Border {
+	res := make(Border, n)
+	res[0] = Vertex{
+		X: rand.Int31n(1000),
+		Y: rand.Int31n(1000),
+	}
+	var dxSign int32 = 1
+	var dySign int32 = 1
+	for i := 1; i < n; i++ {
+		dx := rand.Int31n(10)
+		if rand.Int31n(1) == 0 {
+			dxSign = -1
+		}
+		dy := rand.Int31n(10)
+		if rand.Int31n(1) == 0 {
+			dySign = -1
+		}
+		res[i] = Vertex{
+			X: res[i-1].X + dxSign*dx,
+			Y: res[i-1].Y + dySign*dy,
+		}
 	}
 	return res
 }

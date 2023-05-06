@@ -6,6 +6,7 @@ import (
 	"github.com/softlandia/hismap/models"
 	"github.com/softlandia/hismap/pkg/mongo_db"
 	"github.com/softlandia/hismap/repo/items"
+	"github.com/softlandia/hismap/repo/itemsv2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -25,7 +26,8 @@ type Service struct {
 }
 
 type Repositories struct {
-	Items items.Repo
+	Items   items.Repo
+	ItemsV2 itemsv2.Repo
 }
 
 // NewService - new Service
@@ -56,16 +58,4 @@ func (s *Service) GetItems(itemFilter models.ItemsFilter) models.ItemList {
 func (s *Service) GetOneItem(itemFilter models.ItemsFilter) models.Item {
 	res, _ := s.Repo.Items.FindOne(itemFilter.ToRepo())
 	return models.RepoToItem(res)
-}
-
-func (s *Service) FillTestItems(oid string, n int) models.ItemList {
-	if n <= 0 {
-		return models.ItemList{}
-	}
-
-	res := make(models.ItemList, 0, n)
-	for i := 0; i < n; i++ {
-		res = append(res, models.FooItem(oid))
-	}
-	return res
 }

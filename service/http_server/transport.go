@@ -41,7 +41,7 @@ func AdminHandler(s *service.Service) *gin.Engine {
 	api := g.Group("/api/admin")
 
 	api.GET("/item/find/oid/:oid", itemsTransport.findOid)
-	api.POST("/items/oid/:OID/fill", itemsTransport.fillTestData)
+	api.POST("/items/oid/:OID/vertex/:VERTEX/create", itemsTransport.createFooData)
 	api.DELETE("/items/oid/:OID", itemsTransport.deleteOid)
 
 	return g

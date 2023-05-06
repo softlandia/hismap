@@ -5,6 +5,7 @@ import (
 	"github.com/softlandia/hismap/pkg/config"
 	"github.com/softlandia/hismap/pkg/mongo_db"
 	"github.com/softlandia/hismap/repo/items"
+	"github.com/softlandia/hismap/repo/itemsv2"
 	"github.com/softlandia/hismap/service"
 	"github.com/softlandia/hismap/service/http_server"
 	"log"
@@ -115,7 +116,8 @@ func main() {
 	logger.Info().Msg(">>> test db connect SUCCESS")
 
 	repos := service.Repositories{
-		Items: items.New(ctx, &logger, connect),
+		Items:   items.New(ctx, &logger, connect),
+		ItemsV2: itemsv2.New(ctx, &logger, connect),
 	}
 	if err := testRepo(logger, repos); err != nil {
 		return
@@ -145,7 +147,6 @@ func main() {
 			Err(err).
 			Msg("Main server forced to shutdown")
 	}
-
 	if err := iServer.Shutdown(ctx); err != nil {
 		logger.Fatal().
 			Err(err).

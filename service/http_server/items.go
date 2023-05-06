@@ -38,7 +38,8 @@ func (t *itemsTransport) find(ctx *gin.Context) {
 		Start: int32(Start),
 		Stop:  int32(Stop),
 	}
-	list := t.GetItems(filter)
+	//list := t.GetItems(filter)
+	list := t.Repo.ItemsV2.Find(filter.ToRepo())
 
 	ctx.JSON(200, gin.H{
 		"Xmin":  Xmin,
@@ -52,25 +53,55 @@ func (t *itemsTransport) find(ctx *gin.Context) {
 	})
 }
 
-// fillTestData - заполнить базу элементов тестовыми данными
-func (t *itemsTransport) fillTestData(ctx *gin.Context) {
+/*// createFooData - поместить в базу элемент с придуманными координатами
+func (t *itemsTransport) createFooData(ctx *gin.Context) {
 	oid := ctx.Param("OID")
-	n := xlib.AtoI(ctx.Query("n"), 0)
-	if n == 0 {
-		ctx.JSON(http.StatusBadRequest, gin.H{"n": "invalid"})
+	if len(oid) == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"oid": "invalid"})
 		return
 	}
-
-	itemList := t.FillTestItems(oid, n)
-	if err := t.InsertItems(itemList); err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{
-			"n":     "invalid",
-			"error": err.Error(),
-		})
+	vertex := xlib.AtoI(ctx.Param("VERTEX"), 0) // количество узлов в границе
+	if vertex <= 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"VERTEX": "invalid"})
 		return
 	}
+	var data models.Item
+	if err := ctx.BindJSON(&data); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+	data.Border = models.FooBorder2(vertex)
+	if _, err := t.InsertOneItem(data); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusNoContent)
+}*/
 
-	ctx.JSON(http.StatusOK, gin.H{"n": n})
+// createFooData - поместить в базу элемент с придуманными координатами
+func (t *itemsTransport) createFooData(ctx *gin.Context) {
+	oid := ctx.Param("OID")
+	if len(oid) == 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"oid": "invalid"})
+		return
+	}
+	vertex := xlib.AtoI(ctx.Param("VERTEX"), 0) // количество узлов в границе
+	if vertex <= 0 {
+		ctx.JSON(http.StatusBadRequest, gin.H{"VERTEX": "invalid"})
+		return
+	}
+	var data models.Item
+	if err := ctx.BindJSON(&data); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"err": err.Error()})
+		return
+	}
+	data.X = models.FooVector(vertex)
+	data.Y = models.FooVector(vertex)
+	if _, err := t.Repo.ItemsV2.InsertOne(data.ToRepoV2()); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"err": err.Error()})
+		return
+	}
+	ctx.Status(http.StatusNoContent)
 }
 
 func (t *itemsTransport) deleteOid(ctx *gin.Context) {
